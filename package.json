@@ -1,0 +1,20 @@
+{
+  "name": "broccoli-exec",
+  "description": "Execute arbitrary commands",
+  "version": "0.1.0",
+  "author": "Chris Eldredge <chris.eldredge@gmail.com>",
+  "main": "index.js",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chriseldredge/broccoli-exec"
+  },
+  "keywords": [
+    "broccoli-plugin",
+    "execute"
+  ],
+  "dependencies": {
+    "broccoli-writer": "^0.1.1",
+    "rsvp": "^3.0.9"
+  }
+}
