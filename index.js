@@ -1,4 +1,4 @@
-var Writer = require('broccoli-writer')
+var Writer = require('broccoli-caching-writer')
 var childProcess = require('child_process')
 var Promise = require('rsvp').Promise
 
@@ -14,38 +14,36 @@ function Exec (inputTree, options) {
   }
 }
 
-Exec.prototype.write = function (readTree, destDir) {
-  var self = this
+Exec.prototype.updateCache = function (srcDir, destDir) {
+  var self = this;
 
-  return readTree(this.inputTree).then(function (srcDir) {
-    return new Promise(function (resolve, reject) {
-      if (!self.command) {
-        reject('Must specify command to execute in options.command');
-        return;
+  return new Promise(function (resolve, reject) {
+    if (!self.command) {
+      reject('Must specify command to execute in options.command');
+      return;
+    }
+
+    var args = _replaceDestDirInArguments(self.args, destDir);
+    var execOptions = {
+      cwd: srcDir
+    };
+
+    var proc = childProcess.spawn(self.command, args, execOptions);
+
+    proc.on('close', function(code) {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(new Error(self.command + ' exited with code ' + code));
       }
+    });
 
-      var args = _replaceDestDirInArguments(self.args, destDir);
-      var execOptions = {
-        cwd: srcDir
-      };
+    proc.stdout.on('data', function(data) {
+      self.log('' + data);
+    });
 
-      var proc = childProcess.spawn(self.command, args, execOptions);
-
-      proc.on('close', function(code) {
-        if (code === 0) {
-          resolve();
-        } else {
-          reject(new Error(self.command + ' exited with code ' + code));
-        }
-      });
-
-      proc.stdout.on('data', function(data) {
-        self.log('' + data);
-      });
-
-      proc.stderr.on('data', function(data) {
-        self.log('' + data);
-      });
+    proc.stderr.on('data', function(data) {
+      self.log('' + data);
     });
   });
 }
