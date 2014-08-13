@@ -27,6 +27,32 @@ Before executing the command, broccoli-exec replaces `{destDir}` with the approp
 directory. You don't have to write files into `{destDir}` but if you do not the result of broccoli-exec
 is an empty tree.
 
+### Preparing to Execute
+
+If the command to execute needs to be resolved asynchronously, this can be done by overriding the
+`prepare` function which can either replace or decorate the default implementation. The function
+must return a promise that resolves with a hash that contains the command to execute:
+
+```js
+{
+  command: someResolvedCommand,  // required
+  args: args,                    // optional
+  options: options               // optional
+}
+```
+
+The options property is passed to `child_process.spawn()` to set the cwd and environment.
+
+The default implementation takes care of replaces `{destDir}` in the arguments list. You
+will need to do this yourself if you decide not to delegate to the default implementation.
+
+### Exit Code
+
+By default broccoli-exec assumes a non-zero exit code means the tool failed and therefore fails the build.
+
+You can override this behavior by overriding `interpretExitCode` on your instance of broccoli-exec.
+Your method must call either the resolve or reject callback to continue the build process.
+
 ### License
 
 MIT

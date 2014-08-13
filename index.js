@@ -16,26 +16,28 @@ function Exec (inputTree, options) {
 
 Exec.prototype.updateCache = function (srcDir, destDir) {
   var self = this;
+  return this.prepare(srcDir, destDir).then(function(spawnOptions) {
+    return self.execute(srcDir, destDir, spawnOptions);
+  })
+}
+
+Exec.prototype.execute = function (srcDir, destDir, spawnOptions) {
+  var self = this;
 
   return new Promise(function (resolve, reject) {
-    if (!self.command) {
+    if (!spawnOptions.command) {
       reject('Must specify command to execute in options.command');
       return;
     }
 
-    var args = _replaceDestDirInArguments(self.args, destDir);
-    var execOptions = {
-      cwd: srcDir
-    };
+    var proc = childProcess.spawn(spawnOptions.command, spawnOptions.args, spawnOptions.options);
 
-    var proc = childProcess.spawn(self.command, args, execOptions);
+    proc.on('error', function(err) {
+      reject(new Error('Error spawning command "' + self.command + '": ' + err));
+    });
 
-    proc.on('close', function(code) {
-      if (code === 0) {
-        resolve();
-      } else {
-        reject(new Error(self.command + ' exited with code ' + code));
-      }
+    proc.on('exit', function(code, signal) {
+      self.interpretExitCode(code, signal, resolve, reject);
     });
 
     proc.stdout.on('data', function(data) {
@@ -48,11 +50,36 @@ Exec.prototype.updateCache = function (srcDir, destDir) {
   });
 }
 
+Exec.prototype.prepare = function(srcDir, destDir) {
+  var self = this;
+
+  return new Promise(function (resolve, reject) {
+    var args = self.replaceDestDirInArguments(self.args, destDir);
+    var options = {
+      cwd: srcDir
+    };
+
+    resolve({
+      command: self.command,
+      args: args,
+      options: options
+    });
+  });
+}
+
 Exec.prototype.log = function (data) {
   console.log('' + data);
 }
 
-function _replaceDestDirInArguments(args, destDir) {
+Exec.prototype.interpretExitCode = function(code, signal, resolve, reject) {
+  if (code === 0) {
+    resolve();
+  } else {
+    reject(new Error(self.command + ' exited with code ' + code));
+  }
+}
+
+Exec.prototype.replaceDestDirInArguments = function(args, destDir) {
   return args.map(function(arg) {
     return arg.replace('{destDir}', destDir);
   });
