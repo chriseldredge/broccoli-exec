@@ -2,6 +2,9 @@
 
 A [Broccoli](https://github.com/joliss/broccoli) plugin that executes arbitrary external tools to transform a tree.
 
+[broccoli-caching-writer](https://www.npmjs.org/package/broccoli-caching-writer) is used to avoid running the tool
+unless one or more files in the source tree have changed.
+
 ### Usage
 
 This silly example finds files in the source tree and does a word count on each file,

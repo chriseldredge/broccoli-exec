@@ -75,7 +75,7 @@ Exec.prototype.interpretExitCode = function(code, signal, resolve, reject) {
   if (code === 0) {
     resolve();
   } else {
-    reject(new Error(self.command + ' exited with code ' + code));
+    reject(new Error(this.command + ' exited with code ' + code));
   }
 }
 
